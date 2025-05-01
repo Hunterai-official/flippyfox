@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Fox</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(#87ceeb, #f0f8ff);
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background-image: url('https://i.imgur.com/7UoDCwU.png');
+      background-size: cover;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 2px 2px #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let foxY = 250;
+    let velocity = 0;
+    const gravity = 0.5;
+    const jump = -8;
+    const foxImg = new Image();
+    foxImg.src = "https://i.imgur.com/RzG0TGW.png"; // лис
+
+    const pipes = [];
+    let score = 0;
+    let gameOver = false;
+
+    function resetGame() {
+      foxY = 250;
+      velocity = 0;
+      pipes.length = 0;
+      score = 0;
+      gameOver = false;
+    }
+
+    function drawFox() {
+      ctx.drawImage(foxImg, 80, foxY, 40, 40);
+    }
+
+    function createPipe() {
+      const gap = 140;
+      const topHeight = Math.floor(Math.random() * 300) + 50;
+      pipes.push({ x: canvas.width, top: topHeight, bottom: topHeight + gap });
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "#228B22";
+      for (let pipe of pipes) {
+        ctx.fillRect(pipe.x, 0, 50, pipe.top);
+        ctx.fillRect(pipe.x, pipe.bottom, 50, canvas.height);
+        pipe.x -= 2;
+
+        if (pipe.x + 50 === 80) score++;
+
+        if (
+          (80 + 40 > pipe.x && 80 < pipe.x + 50 &&
+            (foxY < pipe.top || foxY + 40 > pipe.bottom)) ||
+          foxY > canvas.height || foxY < 0
+        ) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function gameLoop() {
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff";
+        ctx.font = "36px sans-serif";
+        ctx.fillText("Game Over", 140, 300);
+        ctx.font = "24px sans-serif";
+        ctx.fillText("Tap to restart", 150, 340);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      velocity += gravity;
+      foxY += velocity;
+
+      drawFox();
+      drawPipes();
+
+      document.getElementById("score").textContent = `Score: ${score}`;
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    setInterval(() => {
+      if (!gameOver) createPipe();
+    }, 1800);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        if (gameOver) {
+          resetGame();
+          requestAnimationFrame(gameLoop);
+        } else {
+          velocity = jump;
+        }
+      }
+    });
+
+    document.addEventListener("touchstart", () => {
+      if (gameOver) {
+        resetGame();
+        requestAnimationFrame(gameLoop);
+      } else {
+        velocity = jump;
+      }
+    });
+
+    foxImg.onload = () => requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
