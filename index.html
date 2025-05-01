@@ -3,20 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Fox</title>
+  <title>Fox Loop</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: linear-gradient(#87ceeb, #f0f8ff);
-      font-family: sans-serif;
+      background: radial-gradient(circle, #1c1f2b, #0d0f16);
+      font-family: 'Arial', sans-serif;
     }
     canvas {
       display: block;
       margin: 0 auto;
-      background-image: url('https://i.imgur.com/7UoDCwU.png');
-      background-size: cover;
     }
     #score {
       position: absolute;
@@ -28,21 +26,52 @@
       color: #fff;
       text-shadow: 2px 2px #000;
     }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 28px;
+      display: none;
+    }
+    #startBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #ff9f43;
+      border: none;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div id="score">Score: 0</div>
+  <div id="overlay">
+    <div>Fox Loop</div>
+    <button id="startBtn">Start</button>
+  </div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const overlay = document.getElementById("overlay");
+    const startBtn = document.getElementById("startBtn");
 
     let foxY = 250;
     let velocity = 0;
     const gravity = 0.5;
     const jump = -8;
     const foxImg = new Image();
-    foxImg.src = "https://i.imgur.com/RzG0TGW.png"; // лис
+    foxImg.src = "https://i.imgur.com/RzG0TGW.png"; // заменим позже на 3D рендер
 
     const pipes = [];
     let score = 0;
@@ -67,7 +96,7 @@
     }
 
     function drawPipes() {
-      ctx.fillStyle = "#228B22";
+      ctx.fillStyle = "#1cc88a";
       for (let pipe of pipes) {
         ctx.fillRect(pipe.x, 0, 50, pipe.top);
         ctx.fillRect(pipe.x, pipe.bottom, 50, canvas.height);
@@ -81,21 +110,13 @@
           foxY > canvas.height || foxY < 0
         ) {
           gameOver = true;
+          overlay.style.display = "flex";
         }
       }
     }
 
     function gameLoop() {
-      if (gameOver) {
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#fff";
-        ctx.font = "36px sans-serif";
-        ctx.fillText("Game Over", 140, 300);
-        ctx.font = "24px sans-serif";
-        ctx.fillText("Tap to restart", 150, 340);
-        return;
-      }
+      if (gameOver) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       velocity += gravity;
@@ -104,7 +125,7 @@
       drawFox();
       drawPipes();
 
-      document.getElementById("score").textContent = `Score: ${score}`;
+      scoreDisplay.textContent = `Score: ${score}`;
 
       requestAnimationFrame(gameLoop);
     }
@@ -113,27 +134,21 @@
       if (!gameOver) createPipe();
     }, 1800);
 
+    function startGame() {
+      overlay.style.display = "none";
+      resetGame();
+      requestAnimationFrame(gameLoop);
+    }
+
+    startBtn.addEventListener("click", startGame);
     document.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        if (gameOver) {
-          resetGame();
-          requestAnimationFrame(gameLoop);
-        } else {
-          velocity = jump;
-        }
-      }
+      if (e.code === "Space") velocity = jump;
     });
+    document.addEventListener("touchstart", () => velocity = jump);
 
-    document.addEventListener("touchstart", () => {
-      if (gameOver) {
-        resetGame();
-        requestAnimationFrame(gameLoop);
-      } else {
-        velocity = jump;
-      }
-    });
-
-    foxImg.onload = () => requestAnimationFrame(gameLoop);
+    foxImg.onload = () => {
+      overlay.style.display = "flex";
+    };
   </script>
 </body>
 </html>
