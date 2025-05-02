@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fox Loop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fox Loop: Portal Edition</title>
   <style>
     html, body {
       margin: 0;
@@ -66,51 +66,66 @@
     const overlay = document.getElementById("overlay");
     const startBtn = document.getElementById("startBtn");
 
+    // ИЗОБРАЖЕНИЯ
+    const foxImg = new Image();
+    foxImg.src = "https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-a6bc-620a-b4af-1515479b2e5f/raw?se=2025-05-02T14%3A05%3A59Z&sp=r&sv=2024-08-04&sr=b&scid=54050ee5-faec-5f35-b363-46ef82af17c7&skoid=06d77cea-897f-49c6-9d78-20f6510f72af&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-02T07%3A40%3A35Z&ske=2025-05-03T07%3A40%3A35Z&sks=b&skv=2024-08-04&sig=hvdVAbvzKnczw2piP16Gr10xjVE4bCCiTGbdt%2BvQwJw%3D";
+
+    const ringImg = new Image();
+    ringImg.src = "https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-72ac-620a-b992-8e811bc4b230/raw?se=2025-05-02T14%3A02%3A59Z&sp=r&sv=2024-08-04&sr=b&scid=b39c7c7b-fe97-5270-be74-7b1cc016d4b1&skoid=06d77cea-897f-49c6-9d78-20f6510f72af&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-02T06%3A24%3A51Z&ske=2025-05-03T06%3A24%3A51Z&sks=b&skv=2024-08-04&sig=eqWD%2BWaboZfQVXtFKhFMlQaFDzKcDlMZ1C7GxZSNhe0%3D";
+
     let foxY = 250;
     let velocity = 0;
     const gravity = 0.5;
     const jump = -8;
-    const foxImg = new Image();
-    foxImg.src = "https://i.imgur.com/RzG0TGW.png"; // заменим позже на 3D рендер
-
-    const pipes = [];
+    let rings = [];
     let score = 0;
     let gameOver = false;
+
+    function getDifficulty(score) {
+      if (score < 10) return { speed: 2, tolerance: 40 };
+      if (score < 20) return { speed: 3, tolerance: 35 };
+      if (score < 30) return { speed: 4, tolerance: 30 };
+      return { speed: 5, tolerance: 28 };
+    }
 
     function resetGame() {
       foxY = 250;
       velocity = 0;
-      pipes.length = 0;
+      rings = [];
       score = 0;
       gameOver = false;
     }
 
     function drawFox() {
-      ctx.drawImage(foxImg, 80, foxY, 40, 40);
+      ctx.drawImage(foxImg, 80, foxY, 50, 50);
     }
 
-    function createPipe() {
-      const gap = 140;
-      const topHeight = Math.floor(Math.random() * 300) + 50;
-      pipes.push({ x: canvas.width, top: topHeight, bottom: topHeight + gap });
+    function createRing() {
+      const centerY = Math.floor(Math.random() * (canvas.height - 200)) + 100;
+      rings.push({ x: canvas.width, y: centerY });
     }
 
-    function drawPipes() {
-      ctx.fillStyle = "#1cc88a";
-      for (let pipe of pipes) {
-        ctx.fillRect(pipe.x, 0, 50, pipe.top);
-        ctx.fillRect(pipe.x, pipe.bottom, 50, canvas.height);
-        pipe.x -= 2;
+    function drawRings() {
+      const { speed, tolerance } = getDifficulty(score);
+      for (let i = rings.length - 1; i >= 0; i--) {
+        const ring = rings[i];
+        ctx.drawImage(ringImg, ring.x - 40, ring.y - 40, 80, 80);
+        ring.x -= speed;
 
-        if (pipe.x + 50 === 80) score++;
+        const foxCenterX = 80 + 25;
+        const foxCenterY = foxY + 25;
+        const dx = foxCenterX - ring.x;
+        const dy = foxCenterY - ring.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (
-          (80 + 40 > pipe.x && 80 < pipe.x + 50 &&
-            (foxY < pipe.top || foxY + 40 > pipe.bottom)) ||
-          foxY > canvas.height || foxY < 0
-        ) {
+        if (dist > tolerance && ring.x < foxCenterX && !ring.passed) {
           gameOver = true;
           overlay.style.display = "flex";
+        }
+
+        if (!ring.passed && ring.x + 40 < foxCenterX) {
+          ring.passed = true;
+          score++;
         }
       }
     }
@@ -123,16 +138,15 @@
       foxY += velocity;
 
       drawFox();
-      drawPipes();
+      drawRings();
 
       scoreDisplay.textContent = `Score: ${score}`;
-
       requestAnimationFrame(gameLoop);
     }
 
     setInterval(() => {
-      if (!gameOver) createPipe();
-    }, 1800);
+      if (!gameOver) createRing();
+    }, 1600);
 
     function startGame() {
       overlay.style.display = "none";
