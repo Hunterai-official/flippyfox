@@ -67,13 +67,10 @@
     const startBtn = document.getElementById("startBtn");
 
     const foxImg = new Image();
-    foxImg.src = "https://i.imgur.com/SlbGaY1.png"; // твой лис
+    foxImg.src = "https://i.imgur.com/SlbGaY1.png"; // лис
 
-    const topPipeImg = new Image();
-    topPipeImg.src = "https://i.imgur.com/EpULqyr.png"; // верхняя колонна (перевёрнутая)
-
-    const bottomPipeImg = new Image();
-    bottomPipeImg.src = "https://i.imgur.com/EpULqyr.png"; // нижняя колонна
+    const pipeImg = new Image();
+    pipeImg.src = "https://i.imgur.com/EpULqyr.png"; // колонна (одна и та же используется сверху и снизу)
 
     let foxY = 250;
     let velocity = 0;
@@ -83,13 +80,12 @@
     const pipes = [];
     let score = 0;
     let gameOver = false;
-
     let imagesLoaded = 0;
 
-    [foxImg, topPipeImg, bottomPipeImg].forEach(img => {
+    [foxImg, pipeImg].forEach(img => {
       img.onload = () => {
         imagesLoaded++;
-        if (imagesLoaded === 3) {
+        if (imagesLoaded === 2) {
           overlay.style.display = "flex";
         }
       };
@@ -115,15 +111,15 @@
 
     function drawPipes() {
       for (let pipe of pipes) {
-        // Верхняя колонна (перевёрнутая)
+        // Верхняя колонна (отражённая)
         ctx.save();
         ctx.translate(pipe.x + 25, pipe.top);
         ctx.scale(1, -1);
-        ctx.drawImage(topPipeImg, -25, 0, 50, pipe.top);
+        ctx.drawImage(pipeImg, -25, 0, 50, pipe.top);
         ctx.restore();
 
         // Нижняя колонна
-        ctx.drawImage(bottomPipeImg, pipe.x, pipe.bottom, 50, canvas.height - pipe.bottom);
+        ctx.drawImage(pipeImg, pipe.x, pipe.bottom, 50, canvas.height - pipe.bottom);
 
         pipe.x -= 2;
 
@@ -150,7 +146,7 @@
       drawFox();
       drawPipes();
 
-      scoreDisplay.textContent = Score: ${score};
+      scoreDisplay.textContent = `Score: ${score}`;
       requestAnimationFrame(gameLoop);
     }
 
@@ -171,4 +167,4 @@
     document.addEventListener("touchstart", () => velocity = jump);
   </script>
 </body>
-</html> 
+</html>
