@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fox Loop: Portal Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fox Loop</title>
   <style>
     html, body {
       margin: 0;
@@ -67,64 +67,75 @@
     const startBtn = document.getElementById("startBtn");
 
     const foxImg = new Image();
-    foxImg.src = "https://i.imgur.com/SlbGaY1.png"; // лис
+    foxImg.src = "https://i.imgur.com/SlbGaY1.png"; // твой лис
 
-    const ringImg = new Image();
-    ringImg.src = "https://i.imgur.com/q9YrUAf.png"; // кольцо
+    const topPipeImg = new Image();
+    topPipeImg.src = "https://i.imgur.com/EpULqyr.png"; // верхняя колонна (перевёрнутая)
+
+    const bottomPipeImg = new Image();
+    bottomPipeImg.src = "https://i.imgur.com/EpULqyr.png"; // нижняя колонна
 
     let foxY = 250;
     let velocity = 0;
     const gravity = 0.5;
     const jump = -8;
-    let rings = [];
+
+    const pipes = [];
     let score = 0;
     let gameOver = false;
 
-    function getDifficulty(score) {
-      if (score < 10) return { speed: 2, tolerance: 40 };
-      if (score < 20) return { speed: 3, tolerance: 35 };
-      if (score < 30) return { speed: 4, tolerance: 30 };
-      return { speed: 5, tolerance: 28 };
-    }
+    let imagesLoaded = 0;
+
+    [foxImg, topPipeImg, bottomPipeImg].forEach(img => {
+      img.onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === 3) {
+          overlay.style.display = "flex";
+        }
+      };
+    });
 
     function resetGame() {
       foxY = 250;
       velocity = 0;
-      rings = [];
+      pipes.length = 0;
       score = 0;
       gameOver = false;
     }
 
     function drawFox() {
-      ctx.drawImage(foxImg, 80, foxY, 50, 50);
+      ctx.drawImage(foxImg, 80, foxY, 40, 40);
     }
 
-    function createRing() {
-      const centerY = Math.floor(Math.random() * (canvas.height - 200)) + 100;
-      rings.push({ x: canvas.width, y: centerY });
+    function createPipe() {
+      const gap = 140;
+      const topHeight = Math.floor(Math.random() * 300) + 50;
+      pipes.push({ x: canvas.width, top: topHeight, bottom: topHeight + gap });
     }
 
-    function drawRings() {
-      const { speed, tolerance } = getDifficulty(score);
-      for (let i = rings.length - 1; i >= 0; i--) {
-        const ring = rings[i];
-        ctx.drawImage(ringImg, ring.x - 40, ring.y - 40, 80, 80);
-        ring.x -= speed;
+    function drawPipes() {
+      for (let pipe of pipes) {
+        // Верхняя колонна (перевёрнутая)
+        ctx.save();
+        ctx.translate(pipe.x + 25, pipe.top);
+        ctx.scale(1, -1);
+        ctx.drawImage(topPipeImg, -25, 0, 50, pipe.top);
+        ctx.restore();
 
-        const foxCenterX = 80 + 25;
-        const foxCenterY = foxY + 25;
-        const dx = foxCenterX - ring.x;
-        const dy = foxCenterY - ring.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        // Нижняя колонна
+        ctx.drawImage(bottomPipeImg, pipe.x, pipe.bottom, 50, canvas.height - pipe.bottom);
 
-        if (dist > tolerance && ring.x < foxCenterX && !ring.passed) {
+        pipe.x -= 2;
+
+        if (pipe.x + 50 === 80) score++;
+
+        if (
+          (80 + 40 > pipe.x && 80 < pipe.x + 50 &&
+            (foxY < pipe.top || foxY + 40 > pipe.bottom)) ||
+          foxY > canvas.height || foxY < 0
+        ) {
           gameOver = true;
           overlay.style.display = "flex";
-        }
-
-        if (!ring.passed && ring.x + 40 < foxCenterX) {
-          ring.passed = true;
-          score++;
         }
       }
     }
@@ -137,15 +148,15 @@
       foxY += velocity;
 
       drawFox();
-      drawRings();
+      drawPipes();
 
       scoreDisplay.textContent = `Score: ${score}`;
       requestAnimationFrame(gameLoop);
     }
 
     setInterval(() => {
-      if (!gameOver) createRing();
-    }, 1600);
+      if (!gameOver) createPipe();
+    }, 1800);
 
     function startGame() {
       overlay.style.display = "none";
@@ -158,12 +169,6 @@
       if (e.code === "Space") velocity = jump;
     });
     document.addEventListener("touchstart", () => velocity = jump);
-
-    foxImg.onload = () => {
-      overlay.style.display = "flex";
-    };
   </script>
 </body>
-</html>
-
 </html>
